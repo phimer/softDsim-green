@@ -1,0 +1,7 @@
+scores: 
+  limits: 
+    budget: 223
+    time: 1
+  params:
+    budget_p: 14
+    quality_k: 1

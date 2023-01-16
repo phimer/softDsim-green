@@ -1,0 +1,9 @@
+scores: 
+  limits: 
+    budget: 200
+    time: 50
+    quality: 150
+  params:
+    budget_p: 1.2
+    time_p: 1.01
+    quality_k: 4   
