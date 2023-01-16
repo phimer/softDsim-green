@@ -10,8 +10,7 @@ import {
     MenuItem,
     MenuList
 } from "@chakra-ui/react"
-//import Logo from "../images/logo-simplify.png"
-import Logo from "../images/logo-simplify.svg"
+import Logo from "../images/logo-simplify.png"
 import { HiMenu, HiOutlineLogout } from "react-icons/hi";
 import { useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
