@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 # explanation of each middleware
 # https://www.gustavwengel.dk/django-middleware-walkthrough/
 MIDDLEWARE = [
+    "django.middleware.gzip.GZipMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
