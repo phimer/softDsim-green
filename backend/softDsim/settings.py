@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 # explanation of each middleware
 # https://www.gustavwengel.dk/django-middleware-walkthrough/
 MIDDLEWARE = [
+    "django_brotli.middleware.BrotliMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
