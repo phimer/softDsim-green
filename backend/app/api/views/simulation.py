@@ -1,4 +1,5 @@
 import logging
+import time
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -27,7 +28,7 @@ from app.models.team import Team
 from app.models.template_scenario import TemplateScenario
 
 from app.models.user_scenario import ScenarioState, UserScenario, EventStatus
-from app.models.task import Task
+from app.models.task import Task, NumpyTasks
 from app.serializers.user_scenario import UserScenarioSerializer
 from app.serializers.team import MemberSerializer
 from app.src.simulation import continue_simulation
@@ -67,7 +68,9 @@ class StartUserScenarioView(APIView):
         try:
             # Craete UserScenario
             user_scenario = UserScenario(
-                user=request.user, template=template, config=config,
+                user=request.user,
+                template=template,
+                config=config,
             )
             user_scenario.save()
 
@@ -94,20 +97,35 @@ class StartUserScenarioView(APIView):
 
             serializer = UserScenarioSerializer(user_scenario)
             # Create Tasks
-            tasks = [  # easy
-                Task(difficulty=1, user_scenario=user_scenario)
-                for _ in range(template.management_goal.easy_tasks)
-            ]
-            tasks += [  # medium
-                Task(difficulty=2, user_scenario=user_scenario)
-                for _ in range(template.management_goal.medium_tasks)
-            ]
-            tasks += [  # hard
-                Task(difficulty=3, user_scenario=user_scenario)
-                for _ in range(template.management_goal.hard_tasks)
-            ]
+            # tasks = [  # easy
+            #     Task(difficulty=1, user_scenario=user_scenario)
+            #     for _ in range(template.management_goal.easy_tasks)
+            # ]
+            # tasks += [  # medium
+            #     Task(difficulty=2, user_scenario=user_scenario)
+            #     for _ in range(template.management_goal.medium_tasks)
+            # ]
+            # tasks += [  # hard
+            #     Task(difficulty=3, user_scenario=user_scenario)
+            #     for _ in range(template.management_goal.hard_tasks)
+            # ]
+
             # Add all tasks to database in a single insert
-            Task.objects.bulk_create(tasks)
+            # start = time.perf_counter()
+            # Task.objects.bulk_create(tasks)
+            # logging.warning(f"create tasks took {time.perf_counter() - start}")
+
+            # Create Tasks as Numpy Tasks
+            print("creating nupy tasks in views/simulation/StartUserScenarioView")
+            start = time.perf_counter()
+            NumpyTasks.create_numpy_tasks_in_db(
+                easy_tasks=template.management_goal.easy_tasks,
+                medium_tasks=template.management_goal.medium_tasks,
+                hard_tasks=template.management_goal.hard_tasks,
+                user_scenario=user_scenario,
+            )
+            logging.warning(f"create tasks took {time.perf_counter() - start}")
+
         except Exception as e:
             msg = f"'{e.__class__.__name__}' occurred when creating user scenario"
             logging.error(msg)
@@ -213,7 +231,8 @@ class AdjustMemberView(APIView):
                 msg = f"Member with id {id} deleted."
                 logging.info(msg)
                 return Response(
-                    data={"status": "success", "data": msg}, status=status.HTTP_200_OK,
+                    data={"status": "success", "data": msg},
+                    status=status.HTTP_200_OK,
                 )
             else:
                 msg = f"Member {id} does not belong to a team in user-scenario {scenario.id}"
@@ -230,7 +249,7 @@ class AdjustMemberView(APIView):
             )
 
 
-def auth_user_scenario(request) -> CachedScenario:
+def auth_user_scenario(request) -> CachedScenario | Response:
     """This functions can be used for each endpoint that deals with UserScenarios during
     a simulation. If the the scenario exists and the user is authorized to use it, the
     function returns the UserScenario object. If something is wrong, the function

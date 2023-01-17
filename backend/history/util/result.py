@@ -67,7 +67,7 @@ def handle_scenario_ending(scenario):
 
 
 def write_result_entry(scenario):
-    final_tasks = CachedTasks(scenario_id=scenario.id)
+    final_tasks = CachedTasks(user_scenario_id=scenario.id)
     result: Result = Result.objects.create(
         user_scenario=scenario,
         total_steps=scenario.state.step_counter,

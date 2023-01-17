@@ -68,7 +68,8 @@ class TemplateScenarioView(APIView):
                     serializer.save()
                 except IndexException as e:
                     return Response(
-                        {"message": str(e)}, status=status.HTTP_400_BAD_REQUEST,
+                        {"message": str(e)},
+                        status=status.HTTP_400_BAD_REQUEST,
                     )
 
                 return Response(
@@ -93,26 +94,43 @@ class TemplateScenarioView(APIView):
     @allowed_roles(["creator", "staff"])
     def delete(self, request, scenario_id=None):
 
-        try:
-            template_scenario = get_object_or_404(TemplateScenario, id=scenario_id)
-            serializer = TemplateScenarioSerializer(template_scenario)
-            template_scenario.delete()
+        if scenario_id:
 
-            return Response(
-                {
-                    "status": "delete successful",
-                    "data": {"name": serializer.data.get("name")},
-                }
-            )
+            try:
+                template_scenario = get_object_or_404(TemplateScenario, id=scenario_id)
+                serializer = TemplateScenarioSerializer(template_scenario)
+                template_scenario.delete()
 
-        except Exception as e:
-            logging.error(
-                f"{e.__class__.__name__} occurred in DELETE template-scenario with id {id}"
-            )
-            return Response(
-                {"status": "something went wrong internally"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+                return Response(
+                    {
+                        "status": "delete successful",
+                        "data": {"name": serializer.data.get("name")},
+                    }
+                )
+
+            except Exception as e:
+                logging.error(
+                    f"{e.__class__.__name__} occurred in DELETE template-scenario with id {id}"
+                )
+                return Response(
+                    {"status": "something went wrong internally"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        else:
+
+            try:
+                TemplateScenario.objects.all().delete()
+
+                return Response({"status": "delete all successful"})
+
+            except Exception as e:
+                logging.error(
+                    f"{e.__class__.__name__} occurred in DELETE template-scenario: Deleting all scenarios failed"
+                )
+                return Response(
+                    {"status": "something went wrong internally"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
     @allowed_roles(["creator", "staff"])
     def patch(self, request, scenario_id=None):
@@ -168,7 +186,10 @@ class TemplateScenarioFromStudioView(APIView):
                     msg = f"Invalid component type {component.get('type')}"
                     logging.warning(msg)
                     return Response(
-                        dict(status="error", data=msg,),
+                        dict(
+                            status="error",
+                            data=msg,
+                        ),
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -324,12 +345,20 @@ class TemplateScenarioUserListView(APIView):
                 )
                 return Response(data, status=status.HTTP_200_OK)
 
+            # this loads the whole object - I want to write a custom query that just loads the template_scenario table (3 columns)
+
+            print("getting all template scenarios")
             template_scenarios = TemplateScenario.objects.all()
-            data = [
-                self.get_data_for_single_scenario(scenario.id, request.user.username)
-                for scenario in template_scenarios
-            ]
-            return Response(data, status=status.HTTP_200_OK)
+            print("got all template scenarios")
+            serializer = ReducedTemplateScenarioSerializer(
+                template_scenarios, many=True
+            )
+            # data = [
+            #     self.get_data_for_single_scenario(scenario.id, request.user.username)
+            #     for scenario in template_scenarios
+            # ]
+            print("serialization done")
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             logging.error(f"{e.__class__.__name__} occurred in GET template-scenario")

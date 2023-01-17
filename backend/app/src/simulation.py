@@ -74,7 +74,7 @@ import pyRAPL
 # @track_emissions
 # @pyRAPL.measureit()
 def simulate(req, session: CachedScenario) -> None:
-    print("@@@@@@@@@@@@@@@@@ simulating...")
+    print("SIMULATING ...")
     """This function does the actual simulation of a scenario fragment."""
     if req.actions is None:
         raise RequestActionException()
